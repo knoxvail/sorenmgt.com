@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Soren Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --black:#080808;
+  --white:#e8e4de;
+  --accent:#d4c4aa;
+  --dim:rgba(232,228,222,0.45);
+}
+html,body{
+  width:100%;height:100%;
+  background:var(--black);
+  color:var(--white);
+  font-family:'Montserrat',sans-serif;
+  overflow:hidden;
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:100;opacity:0.4;
+}
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse at center,
+    transparent 30%,
+    rgba(4,4,4,0.45) 70%,
+    rgba(2,2,2,0.82) 100%
+  );
+  pointer-events:none;z-index:1;
+}
+.bg-glow{
+  position:fixed;
+  top:38%;left:50%;
+  transform:translate(-50%,-50%);
+  width:140vmax;height:140vmax;
+  background:radial-gradient(ellipse at center,
+    rgba(8,8,8,0.0) 0%,
+    rgba(38,34,28,0.75) 38%,
+    rgba(8,8,8,0.0) 62%
+  );
+  animation:breathe 12s ease-in-out infinite;
+  pointer-events:none;z-index:0;
+}
+@keyframes breathe{
+  0%{transform:translate(-50%,-50%) scale(0.65);opacity:0.2;}
+  50%{transform:translate(-50%,-50%) scale(1.1);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(0.65);opacity:0.2;}
+}
+
+.container{
+  width:100vw;height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  position:relative;text-align:center;
+  z-index:2;
+  transition:opacity 0.6s ease;
+  padding-bottom:60px;
+}
+
+/* Logo — shifted up via margin */
+.logo-wrap{
+  margin-bottom:36px;
+  margin-top:-80px;
+  opacity:0;
+  animation:fadeUp 1s ease forwards 0.3s;
+}
+.logo-mark{
+  width:130px;height:130px;
+  cursor:pointer;
+  display:block;
+  will-change:transform;
+}
+.logo-mark svg{width:100%;height:100%;}
+
+.logo-circle{
+  fill:none;stroke:var(--white);stroke-width:0.8;
+  stroke-dasharray:226;stroke-dashoffset:226;
+  animation:drawCircle 1.2s cubic-bezier(0.4,0,0.2,1) forwards 0.6s;
+}
+.logo-slash{
+  stroke:var(--white);stroke-width:0.8;stroke-linecap:round;
+  stroke-dasharray:72;stroke-dashoffset:72;
+  animation:drawSlash 0.6s cubic-bezier(0.4,0,0.2,1) forwards 1.9s;
+}
+@keyframes drawCircle{to{stroke-dashoffset:0;}}
+@keyframes drawSlash{to{stroke-dashoffset:0;}}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(12px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* Stacked wordmark */
+.wordmark{
+  display:flex;flex-direction:column;
+  align-items:center;
+  gap:6px;
+  margin-bottom:20px;
+}
+
+.soren-line{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:clamp(3rem,8vw,5.5rem);
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--white);
+  display:flex;
+  justify-content:center;
+  width:100%;
+  line-height:1;
+  text-indent:0.2em;
+}
+
+.management-line{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:clamp(1.2rem,3vw,2rem);
+  letter-spacing:0.55em;
+  text-transform:uppercase;
+  color:var(--white);
+  display:flex;
+  justify-content:center;
+  width:100%;
+  line-height:1;
+  text-indent:0.55em;
+}
+
+.letter{
+  opacity:0;display:inline-block;
+  animation:letterIn 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+.space{display:inline-block;width:0.4em;}
+
+@keyframes letterIn{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.tagline{
+  font-family:'Montserrat',sans-serif;
+  font-weight:200;
+  font-size:clamp(0.45rem,1vw,0.6rem);
+  letter-spacing:0.65em;
+  text-transform:uppercase;
+  color:var(--accent);
+  opacity:0;
+  animation:fadeUp 1s ease forwards 3.8s;
+}
+
+/* Nav */
+.nav{
+  position:fixed;top:36px;width:100%;
+  display:flex;justify-content:center;
+  opacity:0;animation:fadeUp 0.8s ease forwards 4.2s;
+  z-index:200;
+}
+.nav-btn{
+  font-family:'Montserrat',sans-serif;font-weight:300;
+  font-size:0.62rem;letter-spacing:0.4em;text-transform:uppercase;
+  color:var(--dim);text-decoration:none;
+  background:none;border:none;cursor:pointer;
+  transition:color 0.3s ease;padding:0;
+}
+.nav-btn:hover{color:var(--white);}
+
+/* About overlay */
+.about-overlay{
+  position:fixed;inset:0;
+  background:var(--black);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:100px 48px 80px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.7s ease;
+  z-index:50;
+  text-align:center;
+}
+.about-overlay.visible{opacity:1;pointer-events:all;}
+
+.about-text{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:clamp(1.05rem,1.9vw,1.3rem);
+  line-height:2;
+  color:rgba(232,228,222,0.92);
+  max-width:540px;
+  display:flex;flex-wrap:wrap;justify-content:center;gap:0.28em;
+}
+.about-text .word{
+  opacity:0;display:inline-block;
+  transform:translateY(6px);
+  transition:opacity 0.4s ease, transform 0.4s ease;
+}
+.about-text .word.show{opacity:1;transform:translateY(0);}
+.about-text strong{color:#e8e4de;font-weight:400;}
+
+.psalm-about{
+  position:fixed;
+  bottom:32px;left:50%;
+  transform:translateX(-50%);
+  font-family:'Cormorant Garamond',serif;
+  font-weight:300;
+  font-size:0.62rem;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  color:rgba(232,228,222,0.32);
+  opacity:0;
+  transition:opacity 0.6s ease;
+  z-index:51;
+  white-space:nowrap;
+}
+.psalm-about.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<nav class="nav">
+  <button class="nav-btn" id="navBtn">About</button>
+</nav>
+
+<div class="container" id="main">
+  <div class="logo-wrap">
+    <div class="logo-mark" id="logoMark">
+      <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+        <circle class="logo-circle" cx="36" cy="36" r="28"/>
+        <line class="logo-slash" x1="14" y1="58" x2="58" y2="14"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="wordmark">
+    <div class="soren-line" id="sorenLine"></div>
+    <div class="management-line" id="managementLine"></div>
+  </div>
+
+  <div class="tagline">Only Forward</div>
+</div>
+
+<div class="about-overlay" id="aboutOverlay">
+  <p class="about-text" id="aboutText"></p>
+</div>
+
+<span class="psalm-about" id="psalmAbout">Psalm 139</span>
+
+<script>
+// Build "SOREN" letter by letter
+const sorenEl = document.getElementById('sorenLine');
+const mgmtEl = document.getElementById('managementLine');
+const baseDelay = 2.0;
+const ld = 0.09;
+
+[...'"Soren"'.replace(/"/g,'')].forEach((c,i) => {
+  const s = document.createElement('span');
+  s.className = c===' '?'space':'letter';
+  if(c!==' '){s.textContent=c;s.style.animationDelay=`${baseDelay+i*ld}s`;}
+  sorenEl.appendChild(s);
+});
+
+// "MANAGEMENT" starts after SOREN finishes
+const sorenLen = "Soren".length;
+const mgmtStart = baseDelay + sorenLen * ld + 0.15;
+[...'"Management"'.replace(/"/g,'')].forEach((c,i)=>{
+  const s=document.createElement('span');
+  s.className=c===' '?'space':'letter';
+  if(c!==' '){s.textContent=c;s.style.animationDelay=`${mgmtStart+i*(ld*0.7)}s`;}
+  mgmtEl.appendChild(s);
+});
+
+// Mouse parallax
+const logo = document.getElementById('logoMark');
+let parallaxActive = true;
+document.addEventListener('mousemove', e=>{
+  if(!parallaxActive)return;
+  const x=(e.clientX/window.innerWidth-0.5)*14;
+  const y=(e.clientY/window.innerHeight-0.5)*14;
+  logo.style.transform=`translate(${x}px,${y}px)`;
+});
+
+// About text
+const aboutContent="Soren Management is a boutique real estate firm based in Newport Beach, California, specializing in multifamily acquisitions with a deliberate focus on senior living communities. Small by design, structured for precision over volume, and built to operate with the discipline that complexity demands.";
+const aboutTextEl=document.getElementById('aboutText');
+aboutContent.split(' ').forEach((word,i)=>{
+  const span=document.createElement('span');
+  span.className='word';
+  if(i===0) span.innerHTML='<strong>Soren</strong>';
+  else if(i===1) span.innerHTML='<strong>Management</strong>';
+  else span.textContent=word;
+  aboutTextEl.appendChild(span);
+});
+
+// Nav toggle
+const navBtn=document.getElementById('navBtn');
+const aboutOverlay=document.getElementById('aboutOverlay');
+const main=document.getElementById('main');
+const psalmEl=document.getElementById('psalmAbout');
+let isAbout=false;
+
+function showAbout(){
+  isAbout=true;parallaxActive=false;
+  navBtn.textContent='Back';
+  main.style.opacity='0';main.style.pointerEvents='none';
+  aboutOverlay.classList.add('visible');
+  const wordEls=aboutTextEl.querySelectorAll('.word');
+  wordEls.forEach(w=>w.classList.remove('show'));
+  setTimeout(()=>{
+    wordEls.forEach((w,i)=>{
+      setTimeout(()=>{
+        w.classList.add('show');
+        if(i===wordEls.length-1) setTimeout(()=>psalmEl.classList.add('show'),400);
+      },i*55);
+    });
+  },200);
+}
+
+function showHome(){
+  isAbout=false;parallaxActive=true;
+  navBtn.textContent='About';
+  aboutOverlay.classList.remove('visible');
+  psalmEl.classList.remove('show');
+  setTimeout(()=>{main.style.opacity='1';main.style.pointerEvents='all';},300);
+}
+
+navBtn.addEventListener('click',()=>{isAbout?showHome():showAbout();});
+</script>
+</body>
+</html>

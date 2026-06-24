@@ -251,6 +251,15 @@ body::after{
   white-space:nowrap;
 }
 .psalm-about.show{opacity:1;}
+
+/* Mobile: lift the hero out of dead-center so there's less empty space up top,
+   and shorten the scroll runway so the About copy is reached sooner. */
+@media (max-width:640px){
+  .container{ justify-content:flex-start; padding-top:16vh; }
+  .about-spacer{ height:120vh; }
+  #main{ transition:opacity 0.5s ease; }
+  #main.hero-hide{ opacity:0; pointer-events:none; }
+}
 </style>
 </head>
 <body>
@@ -329,6 +338,7 @@ const wordEls=aboutTextEl.querySelectorAll('.word');
 const aboutText=document.getElementById('aboutText');
 const aboutScrim=document.getElementById('aboutScrim');
 const scrollHint=document.getElementById('scrollHint');
+const mainEl=document.getElementById('main');
 const N=wordEls.length;
 let lastY=window.scrollY;
 let shownReveal=0;
@@ -340,15 +350,22 @@ function updateReveal(){
   const p=clamp(window.scrollY/total);
   const up=window.scrollY<lastY-0.5;
   lastY=window.scrollY;
-  const downReveal=Math.ceil(clamp((p-0.25)/0.70)*N);    // ~3 scroll clicks of dead zone, then appears
-  if(up){
-    const upReveal=Math.ceil(clamp((p-0.70)/0.25)*N);    // clears fast on the way up, before the logo returns
-    shownReveal=Math.min(shownReveal,upReveal);
-  }else{
-    shownReveal=downReveal;
+  if(window.innerWidth<=640){
+    // Mobile: reveal the whole paragraph at once, and sooner (no long dead-scroll).
+    shownReveal = p>0.08 ? N : 0;
+  } else {
+    const downReveal=Math.ceil(clamp((p-0.25)/0.70)*N);    // ~3 scroll clicks of dead zone, then appears
+    if(up){
+      const upReveal=Math.ceil(clamp((p-0.70)/0.25)*N);    // clears fast on the way up, before the logo returns
+      shownReveal=Math.min(shownReveal,upReveal);
+    }else{
+      shownReveal=downReveal;
+    }
+    if(window.scrollY<total*0.22) shownReveal=0;
   }
-  if(window.scrollY<total*0.22) shownReveal=0;
   shownReveal=Math.max(0,Math.min(N,shownReveal));
+  // Mobile: fade the hero out as the paragraph fades in, so they never overlap.
+  if(mainEl) mainEl.classList.toggle('hero-hide', window.innerWidth<=640 && shownReveal>0);
   wordEls.forEach((w,i)=>w.classList.toggle('show',i<shownReveal));
   if(aboutScrim) aboutScrim.style.opacity=String(Math.min(0.9,(shownReveal/N)*1.2));
   if(scrollHint) scrollHint.classList.toggle('show',shownReveal<1);

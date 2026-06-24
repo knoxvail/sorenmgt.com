@@ -351,8 +351,15 @@ function updateReveal(){
   const up=window.scrollY<lastY-0.5;
   lastY=window.scrollY;
   if(window.innerWidth<=640){
-    // Mobile: reveal the whole paragraph at once, and sooner (no long dead-scroll).
-    shownReveal = p>0.08 ? N : 0;
+    // Mobile: scroll-driven word-by-word write-in (like desktop) but more sensitive —
+    // starts almost immediately and fully writes in over a short scroll.
+    const mDown=Math.ceil(clamp((p-0.04)/0.18)*N);   // fully written in by ~p0.22 (a short scroll)
+    if(up){
+      const mUp=Math.ceil(clamp((p-0.22)/0.16)*N);   // clears on the way back up
+      shownReveal=Math.min(shownReveal,mUp);
+    }else{
+      shownReveal=mDown;
+    }
   } else {
     const downReveal=Math.ceil(clamp((p-0.25)/0.70)*N);    // ~3 scroll clicks of dead zone, then appears
     if(up){

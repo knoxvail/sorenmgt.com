@@ -260,12 +260,15 @@ body::after{
   #main{ transition:opacity 0.5s ease; }
   #main.hero-hide{ opacity:0; pointer-events:none; }
 }
+/* Animated WebGL shader background (sits above the static bg-image fallback) */
+.bg-shader{ position:absolute; inset:0; width:100%; height:100%; display:block; z-index:1; pointer-events:none; }
 </style>
 </head>
 <body>
 <div class="bg-wrap">
 <div class="bg-glow"></div>
 <div class="bg-image"></div>
+<canvas id="bgShader" class="bg-shader"></canvas>
 </div>
 
 <div class="about-scrim-fixed" id="aboutScrim"></div>
@@ -380,6 +383,31 @@ function updateReveal(){
 window.addEventListener('scroll',updateReveal,{passive:true});
 window.addEventListener('resize',updateReveal);
 updateReveal();
+</script>
+<script>
+(function(){
+  var cv=document.getElementById('bgShader');
+  if(!cv)return;
+  var gl=cv.getContext('webgl')||cv.getContext('experimental-webgl');
+  if(!gl){cv.style.display='none';return;}
+  var VS='attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
+  var FS='precision highp float;uniform vec2 r;uniform float t;float h(vec2 p){p=fract(p*vec2(127.1,311.7));p+=dot(p,p+34.5);return fract(p.x*p.y);}float nz(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(h(i),h(i+vec2(1.0,0.0)),u.x),mix(h(i+vec2(0.0,1.0)),h(i+vec2(1.0,1.0)),u.x),u.y);}float fbm(vec2 p){float v=0.0,a=0.5;for(int i=0;i<5;i++){v+=a*nz(p);p*=2.03;a*=0.5;}return v;}void main(){vec2 uv=(gl_FragCoord.xy-0.5*r)/r.y;float tt=t*0.024;vec2 q=vec2(fbm(uv*1.4+vec2(0.0,tt)),fbm(uv*1.4+vec2(4.7,-tt)));vec2 s=vec2(fbm(uv*1.4+3.5*q+vec2(1.7,9.2)+tt*0.6),fbm(uv*1.4+3.5*q+vec2(8.3,2.8)-tt*0.6));float f=fbm(uv*1.4+3.5*s);f=smoothstep(0.0,1.15,f);vec3 ink=vec3(0.031);vec3 bone=vec3(0.90,0.88,0.85);vec3 col=mix(ink,bone,f*0.5);col=mix(col,vec3(0.82,0.76,0.66),smoothstep(0.45,0.95,f)*0.12);gl_FragColor=vec4(col,1.0);}';
+  function mk(ty,src){var sh=gl.createShader(ty);gl.shaderSource(sh,src);gl.compileShader(sh);return sh;}
+  var pr=gl.createProgram();gl.attachShader(pr,mk(gl.VERTEX_SHADER,VS));gl.attachShader(pr,mk(gl.FRAGMENT_SHADER,FS));gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){cv.style.display='none';return;}
+  gl.useProgram(pr);
+  var bf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  var lp=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(lp);gl.vertexAttribPointer(lp,2,gl.FLOAT,false,0,0);
+  var uR=gl.getUniformLocation(pr,'r'),uT=gl.getUniformLocation(pr,'t');
+  function fit(){var w=Math.max(1,cv.clientWidth),hh=Math.max(1,cv.clientHeight);if(w!==cv.width||hh!==cv.height){cv.width=w;cv.height=hh;gl.viewport(0,0,w,hh);}}
+  function draw(tm){fit();gl.uniform2f(uR,cv.width,cv.height);gl.uniform1f(uT,tm);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);}
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){draw(8.0);window.addEventListener('resize',function(){draw(8.0);});return;}
+  window.addEventListener('resize',fit);
+  var t0=performance.now();
+  function loop(){draw((performance.now()-t0)/1000.0);requestAnimationFrame(loop);}
+  loop();
+})();
 </script>
 </body>
 </html>
